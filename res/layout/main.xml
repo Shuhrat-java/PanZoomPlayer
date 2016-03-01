@@ -6,10 +6,11 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent">
     <FrameLayout
+            android:layout_gravity="center"
             android:id="@+id/surface_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-        <uzb.uz.PanZoomPlayer.PanZoomTextureView
+        <uzb.uz.PanZoomPlayer.pan.zoom.ZoomableTextureView
                 android:layout_gravity="center"
                 android:layout_centerInParent="true"
                 android:layout_alignParentBottom="true"
@@ -19,6 +20,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/mp4view">
-        </uzb.uz.PanZoomPlayer.PanZoomTextureView>
+        </uzb.uz.PanZoomPlayer.pan.zoom.ZoomableTextureView>
     </FrameLayout>
 </FrameLayout>

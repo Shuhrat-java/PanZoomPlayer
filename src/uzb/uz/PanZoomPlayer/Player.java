@@ -9,13 +9,18 @@ import android.os.Environment;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.MediaController;
 import android.widget.Toast;
+import uzb.uz.PanZoomPlayer.pan.zoom.ZoomableTextureView;
 
 /**
  * Class for playing local videos using custom texture view which has pan and zoom features
+ *
  * @author Shuhrat
  */
 public class Player extends Activity implements MediaController.MediaPlayerControl {
@@ -26,17 +31,15 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
 
     private MediaPlayer mediaPlayer;
 
-    private PanZoomTextureView videoView;
+    private ZoomableTextureView videoView;
 
     private int displayWidth;
 
     private int displayHeight;
 
-    private int videoWidth;
-
-    private int videoHeight;
-
     private Surface surface;
+
+    private FrameLayout topView;
 
     /**
      * Called when the activity is first created.
@@ -47,6 +50,16 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
 
         setContentView(R.layout.main);
 
+        topView = (FrameLayout) findViewById(R.id.top_view);
+
+        topView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                return videoView.onTouch(view, motionEvent);
+            }
+        });
+
         displayMetrics = new DisplayMetrics();
 
         //------------------- Get display fileSize  ---------------------------------
@@ -56,9 +69,11 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
 
         displayHeight = displayMetrics.heightPixels;
 
-        videoView = (PanZoomTextureView) findViewById(R.id.mp4view);
+        videoView = (ZoomableTextureView) findViewById(R.id.mp4view);
 
         videoView.setSurfaceTextureListener(textureListener);
+
+        videoView.setDisplayMetrics(displayWidth, displayHeight);
 
     }
 
@@ -77,6 +92,7 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
 
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
+            setAspectRatio();
         }
 
         @Override
@@ -92,6 +108,7 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
     private void setOnPrepare() {
 
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+
             // Close the progress bar and play the video
             public void onPrepared(MediaPlayer mp) {
 
@@ -141,10 +158,6 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
                 @Override
                 public void onVideoSizeChanged(MediaPlayer mediaPlayer, int width, int height) {
 
-                    videoWidth = width;
-
-                    videoHeight = height;
-
                     setAspectRatio();
 
                 }
@@ -183,10 +196,17 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
     }
 
     public final void setAspectRatio() {
+
+        final int videoWidth = mediaPlayer.getVideoWidth();
+
+        final int videoHeight = mediaPlayer.getVideoHeight();
+
+        Log.d("set aspect ratio ", ": width:" + videoWidth + ", height:" + videoHeight);
+
         // calculate aspect ratio of video
         float aspectRatio = (float) videoWidth / (float) videoHeight;
 
-        int surfaceW, surfaceH, x, y;
+        int surfaceW, surfaceH;
 
         if (displayHeight * aspectRatio > displayWidth) {
             surfaceW = displayWidth;
@@ -196,11 +216,17 @@ public class Player extends Activity implements MediaController.MediaPlayerContr
             surfaceW = (int) (displayHeight * aspectRatio);
         }
         //  >>1 equals to: /2
-        x = (displayWidth - surfaceW) >> 1;
-        y = (displayHeight - surfaceH) >> 1;
+        final int x = (displayWidth - surfaceW) >> 1;
+        final int y = (displayHeight - surfaceH) >> 1;
 
-        videoView.layout(x, y, videoWidth + x, videoHeight + y);
-        videoView.requestLayout();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                videoView.layout(x, y, videoWidth + x, videoHeight + y);
+
+            }
+        });
     }
 
     private void setOnCompletion() {
